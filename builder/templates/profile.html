@@ -1,0 +1,305 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Builder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <link rel="stylesheet" href="../static/style.css">
+</head>
+<body>
+        <div id="step1" class="step">
+            <h2>Personal Details</h2>
+            <form id="personalForm">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+                <label for="MobileNumber">Mobile Number:</label>
+                <input type="number" id="MobileNumber" name="MobileNumber" required>
+                <label for="LinkedIn">LinkedIn ID:</label>
+                <input type="url" id="LinkedIn" name="LinkedIn" required>
+                <label for="GithubId">GitHub ID:</label>
+                <input type="url" id="GithubId" name="GithubId" required>
+                <label for="Address">Address:</label>
+                <textarea id="Address" name="Address" required></textarea>
+                <button type="button" onclick="nextStep('step2')">Next</button>
+            </form>
+        </div>
+    
+        <div id="step2" class="step hidden">
+            <h2>Education</h2>
+            <form id="educationForm">
+                <div id="education-container">
+                    <div class="education-entry" id="education-0">
+                        <label>School Name:</label>
+                        <input type="text" name="school_name[]" required>
+                        <label>Board Name:</label>
+                        <input type="text" name="board_name[]" required>
+                        <label>Year of Passing:</label>
+                        <input type="number" name="year_of_passing[]" min="1900" max="2099" required>
+                        <label>Percentage:</label>
+                        <input type="number" name="percentage[]" min="0" max="100" step="0.01" required>
+                        <button type="button" onclick="addEducation()">Add More</button>
+                    </div>
+                </div>
+                <button type="button" onclick="nextStep('step3')">Next</button>
+            </form>
+        </div>
+    
+        <div id="step3" class="step hidden">
+            <h2>Skills</h2>
+            <div class="skills-section">
+                <h3>Soft Skills</h3>
+                <textarea id="softSkills" name="soft_skills" required></textarea>
+            </div>
+            <div class="skills-section">
+                <h3>Hard Skills</h3>
+                <textarea id="hardSkills" name="hard_skills" required></textarea>
+            </div>
+            <button type="button" onclick="nextStep('step4')">Next</button>
+        </div>
+    
+        <div id="step4" class="step hidden">
+            <h2>Internships</h2>
+            <form id="internshipForm">
+                <div id="internship-container">
+                    <div class="internship-entry" id="internship-0">
+                        <label for="title-0">Internship Title:</label>
+                        <input type="text" id="title-0" name="title[]" required>
+                        <label for="duration-0">Duration:</label>
+                        <input type="text" id="duration-0" name="duration[]" required>
+                        <label for="company-0">Company:</label>
+                        <input type="text" id="company-0" name="company[]" required>
+                        <label for="year-0">Year of Completion:</label>
+                        <input type="text" id="year-0" name="year[]" required>
+                        <button type="button" onclick="addInternship()">Add More</button>
+                    </div>
+                </div>
+                <button type="button" onclick="nextStep('step5')">Next</button>
+            </form>
+        </div>
+    
+        <div id="step5" class="step hidden">
+            <h2>Projects</h2>
+            <form id="projectsForm">
+                <label for="projects">Projects:</label>
+                <input type="text" name="projects" required></textarea>
+                <label for="projects">Project URL:</label>
+                <input type="url" name="projectURL" required></textarea>
+                <button type="button" onclick="nextStep('step6')">Next</button>
+            </form>
+        </div>
+    
+        <div id="step6" class="step hidden">
+            <h2>Experience</h2>
+            <form id="experienceForm">
+                <label for="experience">Experience:</label>
+                <textarea id="experience" name="experience"></textarea>
+                <button type="button" onclick="generatePDF()">Download Resume</button>
+            </form>
+        </div>
+    
+        <script>
+            function nextStep(stepId) {
+                const currentStep = document.querySelector('.step:not(.hidden)');
+                if (!validateStep(currentStep.id)) {
+                    alert('Please fill out all required fields.');
+                    return;
+                }
+    
+                // Hide all steps
+                const steps = document.querySelectorAll('.step');
+                steps.forEach(step => step.classList.add('hidden'));
+                
+                // Show the next step
+                document.getElementById(stepId).classList.remove('hidden');
+            }
+    
+            function validateStep(stepId) {
+                const form = document.querySelector(`#${stepId} form`);
+                if (!form) return true;
+    
+                // Check for empty required fields
+                const requiredFields = form.querySelectorAll('[required]');
+                for (let field of requiredFields) {
+                    if (!field.value.trim()) {
+                        field.focus();
+                        return false;
+                    }
+                }
+    
+                return true;
+            }
+    
+            function addEducation() {
+                const container = document.getElementById('education-container');
+                const educationCount = container.children.length;
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'education-entry';
+                entryDiv.id = `education-${educationCount}`;
+                entryDiv.innerHTML = `
+                    <label>School Name:</label>
+                    <input type="text" name="school_name[]" required>
+                    <label>Board Name:</label>
+                    <input type="text" name="board_name[]" required>
+                    <label>Year of Passing:</label>
+                    <input type="number" name="year_of_passing[]" min="1900" max="2099" required>
+                    <label>Percentage:</label>
+                    <input type="number" name="percentage[]" min="0" max="100" step="0.01" required>
+                    <button type="button" onclick="addEducation()">Add More</button>
+                    <button type="button" onclick="removeEducation(${educationCount})">Remove</button>
+                `;
+                container.appendChild(entryDiv);
+            }
+    
+            function removeEducation(index) {
+                const entryToRemove = document.getElementById(`education-${index}`);
+                if (entryToRemove) {
+                    entryToRemove.remove();
+                }
+            }
+    
+            function addInternship() {
+                const container = document.getElementById('internship-container');
+                const internshipCount = container.children.length;
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'internship-entry';
+                entryDiv.id = `internship-${internshipCount}`;
+                entryDiv.innerHTML = `
+                    <label for="title-${internshipCount}">Internship Title:</label>
+                    <input type="text" id="title-${internshipCount}" name="title[]" required>
+                    <label for="duration-${internshipCount}">Duration:</label>
+                    <input type="text" id="duration-${internshipCount}" name="duration[]" required>
+                    <label for="company-${internshipCount}">Company:</label>
+                    <input type="text" id="company-${internshipCount}" name="company[]" required>
+                    <label for="year-${internshipCount}">Year of Completion:</label>
+                    <input type="text" id="year-${internshipCount}" name="year[]" required>
+                    <button type="button" onclick="addInternship()">Add More</button>
+                    <button type="button" onclick="removeInternship(${internshipCount})">Remove</button>
+                `;
+                container.appendChild(entryDiv);
+            }
+    
+            function removeInternship(index) {
+                const entryToRemove = document.getElementById(`internship-${index}`);
+                if (entryToRemove) {
+                    entryToRemove.remove();
+                }
+            }
+    
+    async function generatePDF() {
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(16);
+
+            // Collect data from the personal details form
+            const name = document.getElementById('name').value || 'N/A';
+            const email = document.getElementById('email').value || 'N/A';
+            const mobileNumber = document.getElementById('MobileNumber').value || 'N/A';
+            const linkedin = document.getElementById('LinkedIn').value || 'N/A';
+            const github = document.getElementById('GithubId').value || 'N/A';
+            const address = document.getElementById('Address').value || 'N/A';
+
+            const softSkills = document.getElementById('softSkills').value || 'N/A';
+            const hardSkills = document.getElementById('hardSkills').value || 'N/A';
+            const projects = document.querySelector('input[name="projects"]').value || 'N/A';
+            const projectURL = document.querySelector('input[name="projectURL"]').value || 'N/A';
+            const experience = document.getElementById('experience').value || 'N/A';
+
+            const educationEntries = document.querySelectorAll('#education-container .education-entry');
+            const internshipEntries = document.querySelectorAll('#internship-container .internship-entry');
+
+            let y = 10; // Starting y coordinate
+
+            // Add Personal Details
+            doc.text('Personal Details', 10, y);
+            y += 10;
+            doc.setFontSize(12);
+            doc.text(`Name: ${name}`, 10, y);
+            y += 10;
+            doc.text(`Email: ${email}`, 10, y);
+            y += 10;
+            doc.text(`Mobile Number: ${mobileNumber}`, 10, y);
+            y += 10;
+            doc.text(`LinkedIn: ${linkedin}`, 10, y);
+            y += 10;
+            doc.text(`GitHub: ${github}`, 10, y);
+            y += 10;
+            doc.text(`Address: ${address}`, 10, y);
+            y += 20;
+
+            // Add Education
+            doc.setFontSize(16);
+            doc.text('Education', 10, y);
+            y += 10;
+            doc.setFontSize(12);
+            educationEntries.forEach((entry, index) => {
+                const schoolName = entry.querySelector('input[name="school_name[]"]').value || 'N/A';
+                const boardName = entry.querySelector('input[name="board_name[]"]').value || 'N/A';
+                const yearOfPassing = entry.querySelector('input[name="year_of_passing[]"]').value || 'N/A';
+                const percentage = entry.querySelector('input[name="percentage[]"]').value || 'N/A';
+
+                doc.text(`Education ${index + 1}: ${schoolName}, ${boardName}, ${yearOfPassing}, ${percentage}%`, 10, y);
+                y += 10;
+            });
+
+            // Add Skills
+            doc.setFontSize(16);
+            doc.text('Skills', 10, y);
+            y += 10;
+            doc.setFontSize(12);
+            doc.text(`Soft Skills: ${softSkills}`, 10, y);
+            y += 10;
+            doc.text(`Hard Skills: ${hardSkills}`, 10, y);
+            y += 20;
+            // Add Internships
+            doc.setFontSize(16);
+            doc.text('Internships', 10, y);
+            y += 10;
+            doc.setFontSize(12);
+            internshipEntries.forEach((entry, index) => {
+                const title = entry.querySelector('input[name="title[]"]').value || 'N/A';
+                const duration = entry.querySelector('input[name="duration[]"]').value || 'N/A';
+                const company = entry.querySelector('input[name="company[]"]').value || 'N/A';
+                const year = entry.querySelector('input[name="year[]"]').value || 'N/A';
+
+                doc.text(`Internship ${index + 1}: ${title}, ${duration}, ${company}, ${year}`, 10, y);
+                y += 10;
+            });
+
+            // Add Projects
+            doc.setFontSize(16);
+            doc.text('Projects', 10, y);
+            y += 10;
+            doc.setFontSize(12);
+            doc.text(`Project: ${projects}`, 10, y);
+            y += 10;
+            doc.text(`Project URL: ${projectURL}`, 10, y);
+            y += 20;
+
+            // Add Experience
+            doc.setFontSize(16);
+            doc.text('Experience', 10, y);
+            y += 10;
+            doc.setFontSize(12);
+            doc.text(experience, 10, y);
+            y += 20;
+
+            
+
+            // Save PDF
+            doc.save('resume.pdf');
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            alert('An error occurred while generating the PDF.');
+        }
+    }
+</script>
+
+    </body>
+    </html>
